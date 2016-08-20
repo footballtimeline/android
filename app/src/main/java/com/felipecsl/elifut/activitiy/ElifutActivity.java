@@ -26,7 +26,7 @@ import icepick.Icepick;
 import retrofit2.Response;
 import rx.Observable;
 
-public abstract class ElifutActivity extends AppCompatActivity {
+public abstract class ElifutActivity extends AppCompatActivity  {
   @Inject ElifutService service;
   @Inject UserPreferences userPreferences;
   @Inject LeagueDetails leagueDetails;

@@ -10,10 +10,7 @@ apply from: './minSdk.gradle'
 
 def getFabricApiKey() {
   String env = System.getenv('ELIFUT_FABRIC_API_KEY');
-  if (env != null) {
-    return env;
-  }
-  return ELIFUT_FABRIC_API_KEY;
+  return env != null ? env : ELIFUT_FABRIC_API_KEY
 }
 
 android {
@@ -97,6 +94,7 @@ dependencies {
   compile "com.android.support:recyclerview-v7:$supportLibVersion"
   compile "com.google.android.gms:play-services-base:$playServicesVersion"
   compile "com.google.android.gms:play-services-analytics:$playServicesVersion"
+  compile "com.google.android.gms:play-services-games:$playServicesVersion"
   compile 'org.apache.commons:commons-io:1.3.2'
   compile 'com.squareup.picasso:picasso:2.6.0-SNAPSHOT'
   compile 'io.reactivex:rxjava:1.1.9'
