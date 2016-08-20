@@ -36,7 +36,7 @@ allprojects {
 
 ext {
   autoValueMoshiVersion = '0.4.0-rc2'
-  supportLibVersion = '24.1.1'
+  supportLibVersion = '24.2.0'
   devApiEndpoint = "http://10.0.3.2:3000/"
   prodApiEndpoint = "http://104.131.134.208/"
   retrofitVersion = "2.1.0"
