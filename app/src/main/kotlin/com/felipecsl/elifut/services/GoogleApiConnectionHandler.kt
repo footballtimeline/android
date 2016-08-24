@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import com.felipecsl.elifut.R
+import com.felipecsl.elifut.models.GoogleApiConnectionResult
 import com.felipecsl.elifut.util.BaseGameUtils
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.api.GoogleApiClient
@@ -13,13 +14,14 @@ import com.google.android.gms.games.Player
 import rx.Single
 import rx.subjects.PublishSubject
 
-class GoogleApiClientCallbacks(private val activity: Activity) : GoogleApiClient.ConnectionCallbacks,
-    GoogleApiClient.OnConnectionFailedListener {
+class GoogleApiConnectionHandler(private val activity: Activity) :
+    GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
   private val googleApiClient: GoogleApiClient
   private var resolvingConnectionFailure = false
   private var signInClicked: Boolean = false
   private var autoStartSignInFlow = true
-  private val resultSubject: PublishSubject<Player> = PublishSubject.create<Player>()
+  private val resultSubject: PublishSubject<GoogleApiConnectionResult> =
+      PublishSubject.create<GoogleApiConnectionResult>()
 
   init {
     // Create the Google API Client with access to Games
@@ -31,9 +33,10 @@ class GoogleApiClientCallbacks(private val activity: Activity) : GoogleApiClient
         .build()
   }
 
-  override fun onConnected(bundle: Bundle?) {
+  override fun onConnected(connectionHint: Bundle?) {
     Log.d(TAG, "onConnected(): connected to Google APIs")
-    resultSubject.onNext(Games.Players.getCurrentPlayer(googleApiClient))
+    val player: Player? = Games.Players.getCurrentPlayer(googleApiClient)
+    resultSubject.onNext(GoogleApiConnectionResult(connectionHint, player, googleApiClient))
     resultSubject.onCompleted()
   }
 
@@ -67,8 +70,8 @@ class GoogleApiClientCallbacks(private val activity: Activity) : GoogleApiClient
     }
   }
 
-  fun result(): Single<Player> {
-    return resultSubject.toSingle();
+  fun result(): Single<GoogleApiConnectionResult> {
+    return resultSubject.toSingle()
   }
 
   fun connect() {
@@ -99,8 +102,6 @@ class GoogleApiClientCallbacks(private val activity: Activity) : GoogleApiClient
   companion object {
     private val TAG = "GoogleApiClientCallback"
     // request codes we use when invoking an external activity
-    private val RC_RESOLVE = 5000
-    private val RC_UNUSED = 5001
     private val RC_SIGN_IN = 9001
   }
 }

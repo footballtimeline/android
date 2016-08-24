@@ -1,4 +1,4 @@
-package com.felipecsl.elifut.activitiy;
+package com.felipecsl.elifut.activity;
 
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.games.Player;
@@ -22,9 +22,10 @@ import com.felipecsl.elifut.R;
 import com.felipecsl.elifut.ResponseObserver;
 import com.felipecsl.elifut.adapter.CountriesSpinnerAdapter;
 import com.felipecsl.elifut.models.Club;
+import com.felipecsl.elifut.models.GoogleApiConnectionResult;
 import com.felipecsl.elifut.models.Nation;
 import com.felipecsl.elifut.preferences.UserPreferences;
-import com.felipecsl.elifut.services.GoogleApiClientCallbacks;
+import com.felipecsl.elifut.services.GoogleApiConnectionHandler;
 
 import java.util.List;
 
@@ -50,7 +51,7 @@ public class MainActivity extends ElifutActivity {
   @BindView(R.id.sign_in_button) SignInButton signInButton;
   @BindView(R.id.main_content) CoordinatorLayout mainContent;
 
-  private GoogleApiClientCallbacks googleApiClientCallbacks;
+  private GoogleApiConnectionHandler googleApiConnectionHandler;
   private String displayName;
   private CountriesSpinnerAdapter nationsAdapter;
 
@@ -62,22 +63,24 @@ public class MainActivity extends ElifutActivity {
           countriesSpinner.setAdapter(nationsAdapter);
         }
       };
-  private final SingleSubscriber<Player> playerSubscriber = new SingleSubscriber<Player>() {
-    @Override public void onSuccess(Player p) {
-      signInButton.setVisibility(View.GONE);
-      if (p == null) {
-        Log.w(TAG, "mGamesClient.getCurrentPlayer() is NULL!");
-        displayName = "???";
-      } else {
-        displayName = p.getDisplayName();
-      }
-      Snackbar.make(mainContent, "Welcome, " + displayName, Snackbar.LENGTH_SHORT).show();
-    }
+  private final SingleSubscriber<GoogleApiConnectionResult> playerSubscriber =
+      new SingleSubscriber<GoogleApiConnectionResult>() {
+        @Override public void onSuccess(GoogleApiConnectionResult connectionResult) {
+          signInButton.setVisibility(View.GONE);
+          Player player = connectionResult.getPlayer();
+          if (player == null) {
+            Log.w(TAG, "mGamesClient.getCurrentPlayer() is NULL!");
+            displayName = "???";
+          } else {
+            displayName = player.getDisplayName();
+          }
+          Snackbar.make(mainContent, "Welcome, " + displayName, Snackbar.LENGTH_SHORT).show();
+        }
 
-    @Override public void onError(Throwable error) {
-      Snackbar.make(mainContent, error.getMessage(), Snackbar.LENGTH_LONG).show();
-    }
-  };
+        @Override public void onError(Throwable error) {
+          Snackbar.make(mainContent, error.getMessage(), Snackbar.LENGTH_LONG).show();
+        }
+      };
 
   @Override public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -86,8 +89,8 @@ public class MainActivity extends ElifutActivity {
     daggerComponent().inject(this);
     setSupportActionBar(toolbar);
 
-    googleApiClientCallbacks = new GoogleApiClientCallbacks(this);
-    subscriptions.add(googleApiClientCallbacks.result().subscribe(playerSubscriber));
+    googleApiConnectionHandler = new GoogleApiConnectionHandler(this);
+    subscriptions.add(googleApiConnectionHandler.result().subscribe(playerSubscriber));
 
     Nation nation = userPreferences.nationPreference().get();
 
@@ -101,22 +104,22 @@ public class MainActivity extends ElifutActivity {
   }
 
   @OnClick(R.id.sign_in_button) public void onClickSignIn() {
-    googleApiClientCallbacks.connect();
+    googleApiConnectionHandler.connect();
   }
 
   @Override protected void onStart() {
     super.onStart();
-    googleApiClientCallbacks.onStart();
+    googleApiConnectionHandler.onStart();
   }
 
   @Override protected void onStop() {
     super.onStop();
-    googleApiClientCallbacks.onStop();
+    googleApiConnectionHandler.onStop();
   }
 
-  @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-    super.onActivityResult(requestCode, resultCode, data);
-    googleApiClientCallbacks.onActivityResult(requestCode, resultCode, data);
+  @Override protected void onActivityResult(int requestCode, int responseCode, Intent data) {
+    super.onActivityResult(requestCode, responseCode, data);
+    googleApiConnectionHandler.onActivityResult(requestCode, responseCode, data);
   }
 
   @Override protected void onDestroy() {

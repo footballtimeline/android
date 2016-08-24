@@ -1,4 +1,4 @@
-package com.felipecsl.elifut.activitiy;
+package com.felipecsl.elifut.activity;
 
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
